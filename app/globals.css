@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Safelist utilities using @source inline() for Tailwind v4 */
+@source inline("from-{gray,red,green,blue,yellow,purple}-{100,200,500}");
+@source inline("to-{gray,red,green,blue,yellow,purple}-{100,200,500}");
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
