@@ -5,17 +5,20 @@ A Next.js 16 application with App Router, TypeScript, Tailwind CSS 4, Drizzle OR
 ## Features
 
 - ⚡️ Next.js 16 with App Router
+- ⚛️ React 19
 - 🎨 Tailwind CSS 4
 - 📘 TypeScript
 - 🗄️ Drizzle ORM with PostgreSQL
 - 🧪 Vitest for unit testing
 - 🎭 Playwright for E2E testing
 - 📚 Storybook for component development
+- 🧩 shadcn/ui components
 - 🔒 Arcjet for security and bot protection
 - 📊 Sentry for error monitoring
 - 📝 ESLint + Prettier for code quality
 - 🪝 Husky + lint-staged for Git hooks
 - 📦 Bundle analyzer
+- 📖 React PageFlip for book-like page transitions
 
 ## Getting Started
 
@@ -46,16 +49,14 @@ pnpm install
 
 3. Set up environment variables:
 
-```bash
-cp .env.example .env.local
-```
+Create a `.env.local` file in the root directory and add your configuration:
 
-Edit `.env.local` and add your configuration:
-
-- `DATABASE_URL` - PostgreSQL connection string
+- `DATABASE_URL` - PostgreSQL connection string (required)
 - `NEXT_PUBLIC_SENTRY_DSN` - Sentry DSN (optional)
 - `ARCJET_KEY` - Arcjet API key (optional)
-- Other service keys as needed
+- `BETTER_STACK_SOURCE_TOKEN` - Better Stack (Logtail) source token (optional)
+- `CHECKLY_API_KEY` - Checkly API key (optional)
+- `CHECKLY_ACCOUNT_ID` - Checkly account ID (optional)
 
 4. Set up the database:
 
@@ -80,18 +81,31 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Project Structure
 
-```
+```text
+├── app/                  # Next.js App Router pages (root level)
+│   ├── api/              # API routes
+│   ├── book/             # Book pages
+│   └── globals.css       # Global styles
+├── components/           # React components (root level)
+│   ├── ui/               # UI components (shadcn/ui)
+│   └── BookView.tsx      # Book viewer component
+├── lib/                  # Utility libraries (root level)
+│   └── utils.ts          # Utility functions
+├── utils/                # Helper functions (root level)
+│   └── db.ts             # Database utilities
 ├── src/
-│   ├── app/              # Next.js App Router pages
-│   ├── components/        # React components
-│   ├── db/               # Database schemas and migrations
-│   ├── libs/             # Utility libraries
-│   └── utils/            # Helper functions
+│   ├── app/              # Additional App Router pages
+│   ├── components/       # Component stories for Storybook
+│   ├── db/               # Database schemas and seed files
+│   │   ├── schema/       # Drizzle schema definitions
+│   │   └── seed.ts       # Database seeding script
+│   └── libs/             # Utility libraries
+│       └── Arcjet.ts     # Arcjet configuration
 ├── tests/                # Test files
-│   ├── unit/             # Unit tests
-│   └── e2e/              # E2E tests
-├── .storybook/           # Storybook configuration
-└── migrations/           # Database migrations
+│   ├── unit/             # Unit tests (Vitest)
+│   └── e2e/              # E2E tests (Playwright)
+├── migrations/           # Database migrations (generated)
+└── .storybook/           # Storybook configuration
 ```
 
 ## Available Scripts
@@ -106,7 +120,9 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - `npm run lint` - Run ESLint
 - `npm run lint:fix` - Fix ESLint errors
-- `npm run type-check` - Type check with TypeScript
+- `npm run type-check` - Type check with TypeScript (alias: `check:types`)
+- `npm run check:types` - Type check with TypeScript
+- `npm run check:deps` - Check for unused dependencies
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting
 
@@ -115,6 +131,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 - `npm run test` - Run unit tests
 - `npm run test:watch` - Run tests in watch mode
 - `npm run test:e2e` - Run E2E tests
+- `npm run test:e2e:ui` - Run E2E tests with Playwright UI
 - `npm run test:coverage` - Run tests with coverage
 
 ### Database
@@ -160,6 +177,12 @@ E2E tests are written with Playwright:
 
 ```bash
 npm run test:e2e
+```
+
+You can also run E2E tests with the Playwright UI for interactive debugging:
+
+```bash
+npm run test:e2e:ui
 ```
 
 ## Storybook
