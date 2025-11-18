@@ -6,8 +6,10 @@ import { sql } from 'drizzle-orm';
 export async function GET() {
   try {
     // Test the connection by running a simple query
-    const versionResult = await db.execute(sql`SELECT version()`);
-    const dbResult = await db.execute(
+    const versionResult = await db.execute<{ version: string }>(
+      sql`SELECT version()`,
+    );
+    const dbResult = await db.execute<{ database_name: string }>(
       sql`SELECT current_database() as database_name`,
     );
 
@@ -18,11 +20,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: 'Successfully connected to PostgreSQL!',
-      database:
-        (dbResult.rows[0] as { database_name: string })?.database_name ||
-        'unknown',
-      postgresVersion:
-        (versionResult.rows[0] as { version: string })?.version || 'unknown',
+      database: dbResult.rows[0]?.database_name || 'unknown',
+      postgresVersion: versionResult.rows[0]?.version || 'unknown',
       tables: {
         books: {
           count: booksCount.length,
