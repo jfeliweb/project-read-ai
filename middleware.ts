@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import arcjet, { detectBot, fixedWindow, shield } from '@arcjet/next';
+import { updateSession } from '@/src/libs/supabase/middleware';
 
 const aj = arcjet({
   key: process.env.ARCJET_KEY ?? '',
-  characteristics: ['userId', 'ip.src'],
+  characteristics: ['ip.src'],
   rules: [
     // Shield protects against common attacks
     shield({
@@ -13,8 +14,7 @@ const aj = arcjet({
     // Bot detection
     detectBot({
       mode: 'LIVE',
-      block: ['AUTOMATED'],
-      allow: ['SEARCH_ENGINE', 'PREVIEW'],
+      allow: ['CATEGORY:SEARCH_ENGINE', 'CATEGORY:PREVIEW'],
     }),
     // Rate limiting
     fixedWindow({
@@ -27,6 +27,7 @@ const aj = arcjet({
 });
 
 export async function middleware(request: NextRequest) {
+  // Arcjet protection
   const decision = await aj.protect(request);
 
   if (decision.isDenied()) {
@@ -38,7 +39,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  // Supabase auth session management
+  return await updateSession(request);
 }
 
 export const config = {
