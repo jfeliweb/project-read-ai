@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, serial, integer } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  serial,
+  integer,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 // Example schema - adjust based on your application needs
 export const books = pgTable('books', {
@@ -20,6 +27,18 @@ export const chapters = pgTable('chapters', {
   imagePrompt: text('image_prompt'),
   image: text('image'),
   page: integer('page').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// User profiles table - extends Supabase auth.users
+// The id references auth.users(id) which is managed by Supabase
+export const profiles = pgTable('profiles', {
+  id: uuid('id').primaryKey(), // References auth.users(id)
+  email: text('email').notNull(),
+  name: text('name'),
+  about: text('about'),
+  role: text('role').default('user'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
