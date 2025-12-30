@@ -1,6 +1,11 @@
 -- Enable Row Level Security on profiles table
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist (for idempotency)
+DROP POLICY IF EXISTS "Users can read own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+
 -- Policy: Users can read their own profile
 CREATE POLICY "Users can read own profile"
   ON profiles
@@ -33,6 +38,9 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop existing trigger if it exists (for idempotency)
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 -- Trigger to call the function when a new user is created
 CREATE TRIGGER on_auth_user_created
