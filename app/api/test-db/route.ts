@@ -19,10 +19,9 @@ export async function GET() {
       success: true,
       message: 'Successfully connected to PostgreSQL!',
       database:
-        (dbResult.rows[0] as { database_name: string })?.database_name ||
-        'unknown',
+        (dbResult[0] as { database_name: string })?.database_name || 'unknown',
       postgresVersion:
-        (versionResult.rows[0] as { version: string })?.version || 'unknown',
+        (versionResult[0] as { version: string })?.version || 'unknown',
       tables: {
         books: {
           count: booksCount.length,
