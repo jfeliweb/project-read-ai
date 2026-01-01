@@ -20,8 +20,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       message: 'Successfully connected to PostgreSQL!',
-      database: dbResult.rows[0]?.database_name || 'unknown',
-      postgresVersion: versionResult.rows[0]?.version || 'unknown',
+      database: dbResult[0]?.database_name || 'unknown',
+      postgresVersion: versionResult[0]?.version || 'unknown',
       tables: {
         books: {
           count: booksCount.length,
