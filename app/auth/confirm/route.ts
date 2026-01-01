@@ -24,7 +24,9 @@ export async function GET(request: Request) {
     });
 
     if (!error) {
-      return NextResponse.redirect(new URL(`/${next.slice(1)}`, request.url));
+      // Redirect to dashboard after successful email confirmation
+      const redirectPath = next && next !== '/' ? next : '/dashboard';
+      return NextResponse.redirect(new URL(redirectPath, request.url));
     }
   }
 
