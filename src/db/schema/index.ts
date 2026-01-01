@@ -14,6 +14,8 @@ export const books = pgTable('books', {
   author: text('author').notNull(),
   slug: text('slug').notNull().unique(),
   userId: uuid('user_id').references(() => profiles.id),
+  bookCoverUrl: text('book_cover_url'),
+  bookCoverDescription: text('book_cover_description'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
