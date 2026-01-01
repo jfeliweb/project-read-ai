@@ -27,6 +27,7 @@ export function SignupForm() {
         data: {
           name,
         },
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
 
@@ -35,6 +36,7 @@ export function SignupForm() {
       setLoading(false);
     } else if (data.user) {
       setSuccess(true);
+      setLoading(false);
       // Create profile via API route
       try {
         const response = await fetch('/api/auth/create-profile', {
@@ -47,10 +49,17 @@ export function SignupForm() {
           }),
         });
         if (!response.ok) {
-          console.error('Failed to create profile');
+          const errorData = await response.json().catch(() => ({}));
+          console.error(
+            'Failed to create profile:',
+            errorData.error || 'Unknown error',
+          );
+          // Don't show error to user since signup was successful
+          // Profile creation can happen later or via trigger
         }
       } catch (err) {
         console.error('Error creating profile:', err);
+        // Don't show error to user since signup was successful
       }
     }
   };

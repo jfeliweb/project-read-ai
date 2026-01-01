@@ -51,18 +51,38 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const isPublicRoute =
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/signup') ||
+    request.nextUrl.pathname.startsWith('/auth') ||
+    request.nextUrl.pathname === '/';
+
   // Protected routes - add routes that require authentication here
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/signup') &&
-    !request.nextUrl.pathname.startsWith('/auth') &&
+    !isPublicRoute &&
     request.nextUrl.pathname.startsWith('/dashboard')
   ) {
     // Redirect to login if accessing protected route without auth
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
+  }
+
+  // Check email confirmation for authenticated users accessing protected routes
+  if (
+    user &&
+    !isPublicRoute &&
+    request.nextUrl.pathname.startsWith('/dashboard')
+  ) {
+    const emailConfirmed = !!user.email_confirmed_at || !!user.confirmed_at;
+
+    if (!emailConfirmed) {
+      // Redirect to login page if not confirmed
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
