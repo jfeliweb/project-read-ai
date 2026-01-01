@@ -8,11 +8,10 @@ export default arcjet({
     shield({
       mode: 'LIVE',
     }),
-    // Bot detection - allow search engines and preview link generators
+    // Bot detection - allows search engines but denies scrapers
     detectBot({
       mode: 'LIVE',
-      block: ['AUTOMATED'], // Blocks automated bots, but allows search engines
-      allow: ['SEARCH_ENGINE', 'PREVIEW'], // Allows search engines and preview link generators
+      allow: ['CATEGORY:SEARCH_ENGINE'], // Allows search engine bots
     }),
     // Rate limit requests
     fixedWindow({
