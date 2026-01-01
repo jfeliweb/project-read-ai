@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 
 export default function DashboardMenu() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -19,7 +19,9 @@ export default function DashboardMenu() {
     <nav className="flex items-center justify-between border-b-2 border-purple-700 p-2 text-purple-800">
       <div>
         <h2 className="font-bold capitalize">
-          {user?.email ? `Welcome, ${user.email.split('@')[0]}` : 'Dashboard'}
+          {user
+            ? `Welcome, ${profile?.name || user.email?.split('@')[0] || 'User'}`
+            : 'Dashboard'}
         </h2>
       </div>
       <div className="mr-2 flex flex-wrap gap-3">

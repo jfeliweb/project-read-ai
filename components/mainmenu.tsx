@@ -23,7 +23,7 @@ const navItems: NavItem[] = [
 ];
 
 export default function MainMenu(): React.JSX.Element {
-  const { user, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -58,7 +58,9 @@ export default function MainMenu(): React.JSX.Element {
           <>
             {user ? (
               <>
-                <span className="text-sm text-gray-600">{user.email}</span>
+                <span className="text-sm text-gray-600">
+                  {profile?.name || user.email}
+                </span>
                 <Button
                   onClick={handleSignOut}
                   variant="outline"
