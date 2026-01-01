@@ -1,4 +1,3 @@
-import React from 'react';
 import { getUserBooks } from '@/src/actions/book';
 import Link from 'next/link';
 import BookCard from '@/components/book-card';
@@ -41,9 +40,7 @@ export default async function DashboardPage({
             <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {books.map((book) => (
                 <div key={book.id} className="group relative">
-                  <Link href={`/book/${book.slug}`}>
-                    <BookCard book={book} />
-                  </Link>
+                  <BookCard book={book} />
                 </div>
               ))}
             </div>
