@@ -65,17 +65,30 @@ export async function getUserBooks(page: number = 1, limit: number = 3) {
 
   const totalCount = totalResult?.count || 0;
 
-  // Get paginated books
+  // Get paginated books with author profile data
   const userBooks = await db
-    .select()
+    .select({
+      id: books.id,
+      bookTitle: books.bookTitle,
+      slug: books.slug,
+      bookCoverUrl: books.bookCoverUrl,
+      createdAt: books.createdAt,
+      updatedAt: books.updatedAt,
+      author: {
+        id: profiles.id,
+        name: profiles.name,
+        email: profiles.email,
+      },
+    })
     .from(books)
+    .innerJoin(profiles, eq(books.author, profiles.id))
     .where(eq(books.author, user.id))
     .orderBy(desc(books.createdAt))
     .limit(limit)
     .offset(offset);
 
   return {
-    books: userBooks,
+    books: userBooks as BookWithAuthor[],
     totalCount,
   };
 }
