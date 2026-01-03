@@ -1,4 +1,3 @@
-import React from 'react';
 import { getBooks } from '@/src/actions/book';
 import Link from 'next/link';
 import Pagination from '@/components/pagination';
