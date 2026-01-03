@@ -5,19 +5,10 @@ import { useState, useLayoutEffect, useCallback, useRef } from 'react';
 import HTMLFlipBook from 'react-pageflip';
 import { Button } from '@/components/ui/button';
 import { BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import type { BookWithAuthor } from '@/src/actions/book';
 
-interface Chapter {
-  title: string;
-  content: string;
-  imagePrompt: string;
-  image: string;
-  page: number;
-}
-
-interface BookData {
-  title: string;
-  author: string;
-  chapters: Chapter[];
+interface BookViewProps {
+  data: BookWithAuthor;
 }
 
 interface Dimensions {
@@ -62,7 +53,9 @@ const colorVariants: Record<Color, string> = {
   purple: 'from-purple-200 to-purple-100',
 };
 
-export default function BookView(): React.JSX.Element | null {
+export default function BookView({
+  data,
+}: BookViewProps): React.JSX.Element | null {
   const bookRef = useRef<HTMLFlipBookRef>(null);
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [dimensions, setDimensions] = useState<Dimensions>({
@@ -140,42 +133,47 @@ export default function BookView(): React.JSX.Element | null {
         }}
       >
         <div
-          className={`flex h-full flex-col items-center justify-center bg-linear-to-b p-6`}
+          className={`flex h-full flex-col items-center justify-center bg-gradient-to-b p-6 ${colorVariants[color]} relative`}
         >
-          <h1 className="flex h-screen items-center justify-center text-center text-4xl font-bold">
-            {data.title}
+          <Image
+            src={data.bookCoverUrl}
+            alt="Book Cover"
+            fill={true}
+            style={{ objectFit: 'cover' }}
+            className="absolute inset-0 -z-10"
+          />
+          <h1 className="flex h-screen items-center justify-center text-center text-4xl font-bold text-white">
+            {data.bookTitle}
           </h1>
         </div>
 
-        <div className="flex h-full cursor-pointer flex-col items-center justify-center bg-white p-6">
-          <p className="flex h-screen items-center justify-center">
-            By {data.author}
-          </p>
+        <div className="flex h-full flex-col items-center justify-center p-6">
+          <h1 className="flex h-screen items-center justify-center text-center">
+            By {data.author.name || 'Unknown'}
+          </h1>
         </div>
 
-        {data.chapters.map((page, index) => (
+        {data.chapters?.map((page, index) => (
           <div
             key={index}
             className={`flex h-full flex-col items-center justify-center bg-linear-to-b p-6 ${colorVariants[color]} relative`}
             style={{ maxHeight: '100%' }}
           >
             <div className="flex-1 overflow-y-auto">
-              <h1 className="mb-6 text-4xl font-bold">{page.title}</h1>
+              <h1 className="mb-6 text-4xl font-bold">{page.subTitle}</h1>
               <div className="relative mt-4 mb-12 h-96 w-full">
                 <Image
-                  src={page.image}
-                  alt={page.title}
+                  src={page.imageUrl}
+                  alt={page.subTitle}
                   fill={true}
                   style={{ objectFit: 'cover' }}
                   className="rounded shadow"
                 />
               </div>
-              <p className="mt-4 text-lg">{page.content}</p>
+              <p className="mt-4 text-lg">{page.textContent}</p>
             </div>
 
-            <span className="absolute right-6 bottom-4">
-              Page {index + 1} of {data.chapters.length}
-            </span>
+            <span className="absolute right-6 bottom-4">Page {index + 1}</span>
           </div>
         ))}
 
@@ -209,9 +207,9 @@ export default function BookView(): React.JSX.Element | null {
         </Button>
         {/* Next Page Button */}
         <Button
-          className={`hover:bg-opacity-70 rounded-full bg-transparent p-2 ${currentPage >= data.chapters.length ? 'bg-opacity-50 cursor-not-allowed' : ''}`}
+          className={`hover:bg-opacity-70 rounded-full bg-transparent p-2 ${currentPage >= (data.chapters?.length || 0) ? 'bg-opacity-50 cursor-not-allowed' : ''}`}
           onClick={flipNextPage}
-          disabled={currentPage >= data.chapters.length}
+          disabled={currentPage >= (data.chapters?.length || 0)}
         >
           <ChevronRight
             className={`text-green-500 ${currentPage === 0 ? 'hover:text-green-500' : 'hover:text-green-700'}`}
@@ -235,51 +233,3 @@ export default function BookView(): React.JSX.Element | null {
     </div>
   );
 }
-
-const data: BookData = {
-  title: '3 Little Acorns Learn About AI',
-  author: 'Ryan',
-  chapters: [
-    {
-      title: 'A Curious Acorn',
-      content:
-        "Once upon a time, in a cozy oak tree, there were three little acorns named Oaky, Acorn, and Acorny.One day, Oaky, the most curious of the three, asked, 'What is this thing called AI that everyone keeps talking about?'",
-      imagePrompt: 'A curious acorn looking up at a computer screen',
-      image: '/images/page1.jpeg',
-      page: 1,
-    },
-    {
-      title: 'The Wise Old Owl',
-      content:
-        "A wise old owl, who lived in a nearby hollow, heard Oaky's question. 'AI, my young friend,' hooted the owl, 'is a clever tool that can think and learn, much like a human brain.It can solve problems, create art, and even drive cars!'",
-      imagePrompt: 'A wise old owl explaining AI to the acorns',
-      image: '/images/page2.jpeg',
-      page: 2,
-    },
-    {
-      title: 'Acorns Explore AI',
-      content:
-        'Intrigued, the three acorns decided to explore AI. They learned about robots that could dance and sing, and computers that could recognize faces. They even tried their hand at coding, creating simple programs that made their leaves glow.',
-      imagePrompt: 'The three acorns playing with a robot',
-      image: '/images/page3.jpeg',
-      page: 3,
-    },
-    {
-      title: 'A Lesson in Responsibility',
-      content:
-        "But the owl warned them, 'With great power comes great responsibility.AI can be a powerful tool, but it's important to use it wisely.' The acorns nodded, understanding the importance of using AI for good.",
-      imagePrompt: 'The wise old owl talking to the acorns',
-      image: '/images/page4.jpeg',
-      page: 4,
-    },
-    {
-      title: 'A Bright Future',
-      content:
-        'As the acorns grew older, they continued to learn about AI. They knew that with knowledge and responsibility, they could use AI to make the world a better place.And so, they set off on their adventure, ready to embrace the future.',
-      imagePrompt:
-        'The three acorns looking up at the sky, excited for the future',
-      image: '/images/page1.jpeg',
-      page: 5,
-    },
-  ],
-};
