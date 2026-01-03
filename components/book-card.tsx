@@ -1,25 +1,41 @@
-import Link from 'next/link';
-import type { InferSelectModel } from 'drizzle-orm';
-import type { books } from '@/src/db/schema';
+import Image from 'next/image';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import BookcardOverlayButtons from '@/components/BookcardOverlayButtons';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import type { BookWithAuthor } from '@/src/actions/book';
 
-type Book = InferSelectModel<typeof books>;
+dayjs.extend(relativeTime);
 
 interface BookCardProps {
-  book: Book;
+  book: BookWithAuthor;
 }
 
 export default function BookCard({ book }: BookCardProps) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
-      <Link href={`/book/${book.slug}`}>
-        <div className="flex flex-col">
-          <h3 className="text-lg font-semibold text-gray-900">{book.title}</h3>
-          <p className="mt-1 text-sm text-gray-600">by {book.author}</p>
-          <div className="mt-2 text-xs text-gray-500">
-            Created: {new Date(book.createdAt).toLocaleDateString()}
-          </div>
+    <Card className="group relative w-full max-w-2xl transform transition duration-300 hover:scale-100 hover:shadow-lg">
+      <CardHeader className="flex flex-col pb-2">
+        <div className="relative aspect-[3/2] w-full overflow-hidden rounded-md">
+          {book?.bookCoverUrl && (
+            <Image
+              src={book.bookCoverUrl}
+              alt={book.bookTitle}
+              fill={true}
+              className="h-full w-full object-cover"
+            />
+          )}
+          <BookcardOverlayButtons book={book} />
         </div>
-      </Link>
-    </div>
+
+        <CardTitle className="mt-2 line-clamp-1 text-lg">
+          {book.bookTitle}
+        </CardTitle>
+
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <p className="line-clamp-1">by {book.author.name || 'Unknown'}</p>
+          <p>{dayjs(book.createdAt).fromNow()}</p>
+        </div>
+      </CardHeader>
+    </Card>
   );
 }
