@@ -38,7 +38,7 @@ export async function generateImageAi(imagePrompt: string): Promise<string> {
       };
 
       const output = await replicate.run(
-        'bytedance/sdxl-lightning-4step:5599ed30703defd1d160a25a63321b4dec97101d98b4674bcc56e41f62f35637',
+        'bytedance/sdxl-lightning-4step:6f7a773af6fc3e8de9d5a3c00be77c17308914bf67772726aff83496ba1e3bbe',
         {
           input,
         },
