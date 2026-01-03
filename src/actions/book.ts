@@ -300,18 +300,34 @@ export async function searchBooks(query: string) {
 
     const searchPattern = `%${query.toLowerCase()}%`;
 
-    // Search in book titles only (author is now UUID, not searchable text)
+    // Search in book titles with author profile data
     const matchingBooks = await db
-      .select()
+      .select({
+        id: books.id,
+        bookTitle: books.bookTitle,
+        slug: books.slug,
+        bookCoverUrl: books.bookCoverUrl,
+        createdAt: books.createdAt,
+        updatedAt: books.updatedAt,
+        author: {
+          id: profiles.id,
+          name: profiles.name,
+          email: profiles.email,
+        },
+      })
       .from(books)
+      .innerJoin(profiles, eq(books.author, profiles.id))
       .where(like(sql`LOWER(${books.bookTitle})`, searchPattern))
       .orderBy(desc(books.createdAt))
       .limit(100);
 
     console.log('Books searched =>', matchingBooks.length);
-    return matchingBooks;
+    return matchingBooks as BookWithAuthor[];
   } catch (error) {
     console.error('Error in searchBooks:', error);
     throw error;
   }
 }
+
+// Alias for compatibility with reference implementation
+export const searchBooksDb = searchBooks;
