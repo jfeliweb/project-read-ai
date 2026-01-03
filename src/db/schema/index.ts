@@ -7,15 +7,15 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-// Example schema - adjust based on your application needs
+// Schema aligned with Mongoose models from reference project
 export const books = pgTable('books', {
   id: serial('id').primaryKey(),
-  title: text('title').notNull(),
-  author: text('author').notNull(),
+  bookTitle: text('book_title').notNull(),
   slug: text('slug').notNull().unique(),
-  userId: uuid('user_id').references(() => profiles.id),
-  bookCoverUrl: text('book_cover_url'),
-  bookCoverDescription: text('book_cover_description'),
+  author: uuid('author')
+    .references(() => profiles.id)
+    .notNull(),
+  bookCoverUrl: text('book_cover_url').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -25,11 +25,10 @@ export const chapters = pgTable('chapters', {
   bookId: integer('book_id')
     .references(() => books.id)
     .notNull(),
-  title: text('title').notNull(),
-  content: text('content').notNull(),
-  imagePrompt: text('image_prompt'),
-  image: text('image'),
-  page: integer('page').notNull(),
+  subTitle: text('sub_title').notNull(),
+  textContent: text('text_content').notNull(),
+  imageUrl: text('image_url').notNull(),
+  page: text('page').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
