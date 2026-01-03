@@ -9,21 +9,26 @@ const isProduction =
   !process.env.DATABASE_URL?.includes('127.0.0.1');
 
 // Sample seed data
+// Note: You'll need to provide a valid UUID for the author field
+// This should be a real user ID from the profiles table
 const sampleBooks = [
   {
-    title: 'The Adventure Begins',
-    author: 'Jane Doe',
+    bookTitle: 'The Adventure Begins',
+    author: '00000000-0000-0000-0000-000000000001', // Replace with real profile UUID
     slug: 'the-adventure-begins',
+    bookCoverUrl: '/images/page1.jpeg',
   },
   {
-    title: 'Mystery of the Lost City',
-    author: 'John Smith',
+    bookTitle: 'Mystery of the Lost City',
+    author: '00000000-0000-0000-0000-000000000001', // Replace with real profile UUID
     slug: 'mystery-of-the-lost-city',
+    bookCoverUrl: '/images/page2.jpeg',
   },
   {
-    title: 'Journey Through Time',
-    author: 'Alice Johnson',
+    bookTitle: 'Journey Through Time',
+    author: '00000000-0000-0000-0000-000000000001', // Replace with real profile UUID
     slug: 'journey-through-time',
+    bookCoverUrl: '/images/page3.jpeg',
   },
 ];
 
@@ -31,53 +36,47 @@ const sampleChapters = [
   // Book 1 chapters
   {
     bookSlug: 'the-adventure-begins',
-    title: 'Chapter 1: The Call',
-    content: 'It was a dark and stormy night when the adventure began...',
-    page: 1,
-    imagePrompt: 'A stormy night with lightning in the distance',
-    image: '/images/page1.jpeg',
+    subTitle: 'Chapter 1: The Call',
+    textContent: 'It was a dark and stormy night when the adventure began...',
+    page: '1',
+    imageUrl: '/images/page1.jpeg',
   },
   {
     bookSlug: 'the-adventure-begins',
-    title: 'Chapter 2: The Journey',
-    content: 'The next morning, our hero set out on a journey...',
-    page: 2,
-    imagePrompt: 'A hero walking on a path at sunrise',
-    image: '/images/page2.jpeg',
+    subTitle: 'Chapter 2: The Journey',
+    textContent: 'The next morning, our hero set out on a journey...',
+    page: '2',
+    imageUrl: '/images/page2.jpeg',
   },
   // Book 2 chapters
   {
     bookSlug: 'mystery-of-the-lost-city',
-    title: 'Chapter 1: The Discovery',
-    content: 'Deep in the jungle, an ancient map was found...',
-    page: 1,
-    imagePrompt: 'An ancient map in a jungle setting',
-    image: '/images/page3.jpeg',
+    subTitle: 'Chapter 1: The Discovery',
+    textContent: 'Deep in the jungle, an ancient map was found...',
+    page: '1',
+    imageUrl: '/images/page3.jpeg',
   },
   {
     bookSlug: 'mystery-of-the-lost-city',
-    title: 'Chapter 2: The Expedition',
-    content: 'The team assembled to explore the lost city...',
-    page: 2,
-    imagePrompt: 'Explorers preparing for an expedition',
-    image: '/images/page4.jpeg',
+    subTitle: 'Chapter 2: The Expedition',
+    textContent: 'The team assembled to explore the lost city...',
+    page: '2',
+    imageUrl: '/images/page4.jpeg',
   },
   // Book 3 chapters
   {
     bookSlug: 'journey-through-time',
-    title: 'Chapter 1: The Time Machine',
-    content: 'In a secret laboratory, a time machine was built...',
-    page: 1,
-    imagePrompt: 'A futuristic time machine in a laboratory',
-    image: '/images/page1.jpeg',
+    subTitle: 'Chapter 1: The Time Machine',
+    textContent: 'In a secret laboratory, a time machine was built...',
+    page: '1',
+    imageUrl: '/images/page1.jpeg',
   },
   {
     bookSlug: 'journey-through-time',
-    title: 'Chapter 2: The First Jump',
-    content: 'With a flash of light, the journey through time began...',
-    page: 2,
-    imagePrompt: 'A bright flash of light and swirling time portals',
-    image: '/images/page2.jpeg',
+    subTitle: 'Chapter 2: The First Jump',
+    textContent: 'With a flash of light, the journey through time began...',
+    page: '2',
+    imageUrl: '/images/page2.jpeg',
   },
 ];
 
@@ -147,11 +146,10 @@ async function seed() {
     console.log('📖 Inserting chapters...');
     const chaptersToInsert = sampleChapters.map((chapter) => ({
       bookId: bookMap.get(chapter.bookSlug)!,
-      title: chapter.title,
-      content: chapter.content,
+      subTitle: chapter.subTitle,
+      textContent: chapter.textContent,
       page: chapter.page,
-      imagePrompt: chapter.imagePrompt,
-      image: chapter.image,
+      imageUrl: chapter.imageUrl,
     }));
 
     const insertedChapters = await db
