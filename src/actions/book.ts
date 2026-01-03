@@ -1,9 +1,9 @@
 'use server';
 
 import { db } from '@/src/db';
-import { books, chapters } from '@/src/db/schema';
+import { books, chapters, profiles } from '@/src/db/schema';
 import { getUser } from '@/src/libs/auth/utils';
-import { eq, desc, sql, or, like } from 'drizzle-orm';
+import { eq, desc, sql, like } from 'drizzle-orm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function getBooks(page: number = 1, limit: number = 10) {
@@ -17,16 +17,29 @@ export async function getBooks(page: number = 1, limit: number = 10) {
 
     const totalCount = totalResult?.count || 0;
 
-    // Get paginated books
-    const allBooks = await db
-      .select()
+    // Get paginated books with author profile data
+    const booksWithAuthors = await db
+      .select({
+        id: books.id,
+        bookTitle: books.bookTitle,
+        slug: books.slug,
+        bookCoverUrl: books.bookCoverUrl,
+        createdAt: books.createdAt,
+        updatedAt: books.updatedAt,
+        author: {
+          id: profiles.id,
+          name: profiles.name,
+          email: profiles.email,
+        },
+      })
       .from(books)
+      .innerJoin(profiles, eq(books.author, profiles.id))
       .orderBy(desc(books.createdAt))
       .limit(limit)
       .offset(offset);
 
     return {
-      books: allBooks,
+      books: booksWithAuthors as BookWithAuthor[],
       totalCount,
     };
   } catch (error) {
@@ -48,7 +61,7 @@ export async function getUserBooks(page: number = 1, limit: number = 3) {
   const [totalResult] = await db
     .select({ count: sql<number>`count(*)` })
     .from(books)
-    .where(eq(books.userId, user.id));
+    .where(eq(books.author, user.id));
 
   const totalCount = totalResult?.count || 0;
 
@@ -56,7 +69,7 @@ export async function getUserBooks(page: number = 1, limit: number = 3) {
   const userBooks = await db
     .select()
     .from(books)
-    .where(eq(books.userId, user.id))
+    .where(eq(books.author, user.id))
     .orderBy(desc(books.createdAt))
     .limit(limit)
     .offset(offset);
@@ -80,6 +93,31 @@ interface StoryData {
   bookCoverDescription: string;
   bookCoverUrl: string;
   chapters: Chapter[];
+}
+
+// Extended type for components that need author profile data
+export interface BookWithAuthor {
+  id: number;
+  bookTitle: string;
+  slug: string;
+  author: {
+    id: string;
+    name: string | null;
+    email: string;
+  };
+  bookCoverUrl: string;
+  createdAt: Date;
+  updatedAt: Date;
+  chapters?: Array<{
+    id: number;
+    bookId: number;
+    subTitle: string;
+    textContent: string;
+    imageUrl: string;
+    page: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }>;
 }
 
 export async function generateStoryAi(prompt: string): Promise<StoryData> {
@@ -159,30 +197,24 @@ export async function saveStoryDb(storyData: StoryData) {
       slug = `${baseSlug}-${Date.now()}`;
     }
 
-    // Get the author name from user profile or email
-    const userName = user.email?.split('@')[0] || 'Unknown Author';
-
     // Insert book record
     const [book] = await db
       .insert(books)
       .values({
-        title: storyData.bookTitle,
-        author: userName,
+        bookTitle: storyData.bookTitle,
+        author: user.id,
         slug: slug,
-        userId: user.id,
         bookCoverUrl: storyData.bookCoverUrl,
-        bookCoverDescription: storyData.bookCoverDescription,
       })
       .returning();
 
     // Insert chapter records
     const chapterValues = storyData.chapters.map((chapter) => ({
       bookId: book.id,
-      title: chapter.subTitle,
-      content: chapter.textContent,
-      imagePrompt: chapter.imageDescription,
-      image: chapter.imageUrl,
-      page: chapter.page,
+      subTitle: chapter.subTitle,
+      textContent: chapter.textContent,
+      imageUrl: chapter.imageUrl,
+      page: chapter.page.toString(),
     }));
 
     await db.insert(chapters).values(chapterValues);
@@ -217,7 +249,7 @@ export async function deleteBook(id: number) {
       throw new Error('Book not found');
     }
 
-    if (book.userId !== user.id) {
+    if (book.author !== user.id) {
       throw new Error('You are not authorized to delete this book');
     }
 
@@ -242,16 +274,11 @@ export async function searchBooks(query: string) {
 
     const searchPattern = `%${query.toLowerCase()}%`;
 
-    // Search in book titles and get matching books
+    // Search in book titles only (author is now UUID, not searchable text)
     const matchingBooks = await db
       .select()
       .from(books)
-      .where(
-        or(
-          like(sql`LOWER(${books.title})`, searchPattern),
-          like(sql`LOWER(${books.author})`, searchPattern),
-        ),
-      )
+      .where(like(sql`LOWER(${books.bookTitle})`, searchPattern))
       .orderBy(desc(books.createdAt))
       .limit(100);
 
