@@ -3,8 +3,37 @@
 import { db } from '@/src/db';
 import { books, chapters } from '@/src/db/schema';
 import { getUser } from '@/src/libs/auth/utils';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, or, like } from 'drizzle-orm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+
+export async function getBooks(page: number = 1, limit: number = 10) {
+  try {
+    const offset = (page - 1) * limit;
+
+    // Get total count of all books
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(books);
+
+    const totalCount = totalResult?.count || 0;
+
+    // Get paginated books
+    const allBooks = await db
+      .select()
+      .from(books)
+      .orderBy(desc(books.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return {
+      books: allBooks,
+      totalCount,
+    };
+  } catch (error) {
+    console.error('Error fetching books:', error);
+    throw error;
+  }
+}
 
 export async function getUserBooks(page: number = 1, limit: number = 3) {
   const user = await getUser();
@@ -75,6 +104,36 @@ export async function generateStoryAi(prompt: string): Promise<StoryData> {
   }
 }
 
+export async function getBook(slug: string) {
+  try {
+    // Get book with all chapters
+    const [book] = await db
+      .select()
+      .from(books)
+      .where(eq(books.slug, slug))
+      .limit(1);
+
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    // Get all chapters for this book
+    const bookChapters = await db
+      .select()
+      .from(chapters)
+      .where(eq(chapters.bookId, book.id))
+      .orderBy(chapters.page);
+
+    return {
+      ...book,
+      chapters: bookChapters,
+    };
+  } catch (error) {
+    console.error('Error fetching book:', error);
+    throw error;
+  }
+}
+
 export async function saveStoryDb(storyData: StoryData) {
   try {
     const user = await getUser();
@@ -135,6 +194,71 @@ export async function saveStoryDb(storyData: StoryData) {
     };
   } catch (error) {
     console.error('Error saving story to database:', error);
+    throw error;
+  }
+}
+
+export async function deleteBook(id: number) {
+  try {
+    const user = await getUser();
+
+    if (!user) {
+      throw new Error('You need to be logged in to delete a book');
+    }
+
+    // Get the book to verify ownership
+    const [book] = await db
+      .select()
+      .from(books)
+      .where(eq(books.id, id))
+      .limit(1);
+
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    if (book.userId !== user.id) {
+      throw new Error('You are not authorized to delete this book');
+    }
+
+    // Delete chapters first (if not using CASCADE)
+    await db.delete(chapters).where(eq(chapters.bookId, id));
+
+    // Delete the book
+    await db.delete(books).where(eq(books.id, id));
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting book:', error);
+    throw error;
+  }
+}
+
+export async function searchBooks(query: string) {
+  try {
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+
+    const searchPattern = `%${query.toLowerCase()}%`;
+
+    // Search in book titles and get matching books
+    const matchingBooks = await db
+      .select()
+      .from(books)
+      .where(
+        or(
+          like(sql`LOWER(${books.title})`, searchPattern),
+          like(sql`LOWER(${books.author})`, searchPattern),
+        ),
+      )
+      .orderBy(desc(books.createdAt))
+      .limit(100);
+
+    console.log('Books searched =>', matchingBooks.length);
+    return matchingBooks;
+  } catch (error) {
+    console.error('Error in searchBooks:', error);
     throw error;
   }
 }
