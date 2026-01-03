@@ -142,16 +142,29 @@ export async function generateStoryAi(prompt: string): Promise<StoryData> {
   }
 }
 
-export async function getBook(slug: string) {
+export async function getBook(slug: string): Promise<BookWithAuthor> {
   try {
-    // Get book with all chapters
-    const [book] = await db
-      .select()
+    // Get book with author profile data
+    const [bookWithAuthor] = await db
+      .select({
+        id: books.id,
+        bookTitle: books.bookTitle,
+        slug: books.slug,
+        bookCoverUrl: books.bookCoverUrl,
+        createdAt: books.createdAt,
+        updatedAt: books.updatedAt,
+        author: {
+          id: profiles.id,
+          name: profiles.name,
+          email: profiles.email,
+        },
+      })
       .from(books)
+      .innerJoin(profiles, eq(books.author, profiles.id))
       .where(eq(books.slug, slug))
       .limit(1);
 
-    if (!book) {
+    if (!bookWithAuthor) {
       throw new Error('Book not found');
     }
 
@@ -159,11 +172,11 @@ export async function getBook(slug: string) {
     const bookChapters = await db
       .select()
       .from(chapters)
-      .where(eq(chapters.bookId, book.id))
+      .where(eq(chapters.bookId, bookWithAuthor.id))
       .orderBy(chapters.page);
 
     return {
-      ...book,
+      ...bookWithAuthor,
       chapters: bookChapters,
     };
   } catch (error) {
