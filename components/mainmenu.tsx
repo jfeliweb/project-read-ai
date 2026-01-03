@@ -36,7 +36,13 @@ export default function MainMenu(): React.JSX.Element {
     <nav className="flex flex-wrap items-center justify-between gap-2 border-b-2 border-purple-700 pb-2 text-lg text-purple-800">
       {/* Logo and title */}
       <Link href="/" className="mx-2 mt-2 flex items-center">
-        <Image src="/logo.png" alt="logo" width={60} height={60} />
+        <Image
+          src="/logo.png"
+          alt="logo"
+          width={60}
+          height={60}
+          loading="eager"
+        />
         <span className="ml-2 text-xl font-bold text-purple-800">
           ReaderAI Labs
         </span>
