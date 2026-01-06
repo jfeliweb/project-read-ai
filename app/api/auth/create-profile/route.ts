@@ -27,7 +27,8 @@ export async function POST(request: Request) {
 
     // For new signups (not yet authenticated), we allow profile creation
     // The userId comes from the signup response, which is trusted
-    const profile = await createUserProfile(userId, email);
+    // Pass the name directly to createUserProfile to avoid an extra update
+    const profile = await createUserProfile(userId, email, name);
 
     if (!profile) {
       return NextResponse.json(
@@ -36,10 +37,13 @@ export async function POST(request: Request) {
       );
     }
 
-    // Update name if provided
-    if (name) {
+    // If name was provided and profile was updated, refresh it
+    if (name && profile.name !== name) {
       const { updateUserProfile } = await import('@/src/libs/auth/utils');
-      await updateUserProfile(userId, { name });
+      const updatedProfile = await updateUserProfile(userId, { name });
+      if (updatedProfile) {
+        return NextResponse.json({ success: true, profile: updatedProfile });
+      }
     }
 
     return NextResponse.json({ success: true, profile });

@@ -34,6 +34,7 @@
     "db:migrate:prod": "dotenv -e .env.production.local -- drizzle-kit migrate",
     "db:push:prod": "dotenv -e .env.production.local -- drizzle-kit push",
     "db:studio:prod": "dotenv -e .env.production.local -- drizzle-kit studio",
+    "db:test-connection": "bash scripts/test-db-connection.sh",
     "analyze": "ANALYZE=true next build",
     "prepare": "husky install"
   },

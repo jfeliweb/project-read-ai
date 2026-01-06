@@ -38,7 +38,7 @@ export const chapters = pgTable('chapters', {
 export const profiles = pgTable('profiles', {
   id: uuid('id').primaryKey(), // References auth.users(id)
   email: text('email').notNull(),
-  name: text('name'),
+  name: text('name').notNull(),
   about: text('about'),
   role: text('role').default('user'),
   createdAt: timestamp('created_at').defaultNow().notNull(),

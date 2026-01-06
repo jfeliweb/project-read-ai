@@ -25,13 +25,21 @@ export async function getUserProfile() {
   return profile[0] || null;
 }
 
-export async function createUserProfile(userId: string, email: string) {
+export async function createUserProfile(
+  userId: string,
+  email: string,
+  name?: string,
+) {
   try {
+    // Use provided name, or extract username from email as default
+    const profileName = name || email.split('@')[0] || 'User';
+
     const profile = await db
       .insert(profiles)
       .values({
         id: userId,
         email,
+        name: profileName,
         role: 'user',
       })
       .returning();
