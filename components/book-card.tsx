@@ -1,8 +1,10 @@
+'use client';
 import Image from 'next/image';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import BookcardOverlayButtons from '@/components/BookcardOverlayButtons';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useRouter } from 'next/navigation';
 import type { BookWithAuthor } from '@/src/actions/book';
 
 dayjs.extend(relativeTime);
@@ -12,8 +14,17 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book }: BookCardProps) {
+  const router = useRouter();
+
+  const handleCardClick = () => {
+    router.push(`/book/${book.slug}`);
+  };
+
   return (
-    <Card className="group relative w-full max-w-2xl transform transition duration-300 hover:scale-100 hover:shadow-lg">
+    <Card
+      className="group relative w-full max-w-2xl transform cursor-pointer transition duration-300 hover:scale-100 hover:shadow-lg"
+      onClick={handleCardClick}
+    >
       <CardHeader className="flex flex-col pb-2">
         <div className="relative aspect-[3/2] w-full overflow-hidden rounded-md">
           {book?.bookCoverUrl && (

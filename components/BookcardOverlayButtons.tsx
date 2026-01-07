@@ -1,6 +1,5 @@
 'use client';
 import React from 'react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { deleteBook } from '@/src/actions/book';
@@ -24,14 +23,23 @@ export default function BookcardOverlayButtons({
     router.refresh();
   };
 
+  const handleViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/book/${book.slug}`);
+  };
+
   return (
-    <div className="bg-opacity-30 absolute inset-0 flex items-center justify-center rounded-xl bg-black opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+    <div
+      className="bg-opacity-30 absolute inset-0 flex items-center justify-center rounded-xl bg-black opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="flex space-x-4">
-        <Link href={`/book/${book.slug}`}>
-          <Button className="bg-blue-800 text-white hover:bg-blue-500">
-            View
-          </Button>
-        </Link>
+        <Button
+          onClick={handleViewClick}
+          className="bg-blue-800 text-white hover:bg-blue-500"
+        >
+          View
+        </Button>
         <Button
           onClick={handleDelete}
           className="bg-red-500 text-white hover:bg-red-700"

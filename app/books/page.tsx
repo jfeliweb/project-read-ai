@@ -1,5 +1,4 @@
 import { getBooks } from '@/src/actions/book';
-import Link from 'next/link';
 import Pagination from '@/components/pagination';
 import BookCard from '@/components/book-card';
 
@@ -30,9 +29,7 @@ export default async function BooksPage({ searchParams }: BooksPageProps) {
               key={book.id}
               className="transform transition duration-300 hover:scale-105 hover:shadow-lg"
             >
-              <Link href={`/book/${book.slug}`}>
-                <BookCard book={book} />
-              </Link>
+              <BookCard book={book} />
             </div>
           ))}
         </div>
