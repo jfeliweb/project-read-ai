@@ -25,7 +25,7 @@ A Next.js 16 application with App Router, TypeScript, Tailwind CSS 4, Drizzle OR
 ### Prerequisites
 
 - Node.js 20 or higher
-- PostgreSQL database
+- Access to self-hosted Supabase database
 - npm, yarn, pnpm, or bun
 
 ### Installation
@@ -51,25 +51,31 @@ pnpm install
 
 Create a `.env.local` file in the root directory and add your configuration:
 
-- `DATABASE_URL` - PostgreSQL connection string (required)
+- `DATABASE_URL` - Self-hosted Supabase PostgreSQL connection string (required)
+  - Format: `postgresql://postgres:[YOUR-PASSWORD]@[VPS-SERVER-IP]:5432/postgres`
+  - Replace `[YOUR-PASSWORD]` with your actual database password
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase API URL (for authentication)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key (for authentication)
 - `NEXT_PUBLIC_SENTRY_DSN` - Sentry DSN (optional)
 - `ARCJET_KEY` - Arcjet API key (optional)
 - `BETTER_STACK_SOURCE_TOKEN` - Better Stack (Logtail) source token (optional)
 - `CHECKLY_API_KEY` - Checkly API key (optional)
 - `CHECKLY_ACCOUNT_ID` - Checkly account ID (optional)
 
-4. Set up the database:
+1. Set up the database:
 
 ```bash
-# Generate migrations
-npm run db:generate
+# Run migrations to connect to your self-hosted Supabase
+npm run db:migrate:local
 
-# Run migrations
-npm run db:migrate
+# Or push schema directly (development only)
+npm run db:push:local
 
-# Or push schema directly (development)
-npm run db:push
+# Verify connection
+npm run db:test-connection
 ```
+
+**Note:** See [DATABASE.md](DATABASE.md) for detailed database setup instructions.
 
 5. Run the development server:
 
