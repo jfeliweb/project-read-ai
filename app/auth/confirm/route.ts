@@ -24,9 +24,11 @@ export async function GET(request: Request) {
     });
 
     if (!error) {
-      // Redirect to dashboard after successful email confirmation
-      const redirectPath = next && next !== '/' ? next : '/dashboard';
-      return NextResponse.redirect(new URL(redirectPath, request.url));
+      // Redirect to login after successful email confirmation
+      const redirectPath = next && next !== '/' ? next : '/login';
+      const redirectUrl = new URL(redirectPath, request.url);
+      redirectUrl.searchParams.set('confirmed', 'true');
+      return NextResponse.redirect(redirectUrl);
     }
   }
 

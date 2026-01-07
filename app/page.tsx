@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -19,7 +20,19 @@ interface GradientIconProps {
   imageSrc: string;
 }
 
-export default function LandingPage(): React.JSX.Element {
+interface LandingPageProps {
+  searchParams: Promise<{ code?: string }>;
+}
+
+export default async function LandingPage({
+  searchParams,
+}: LandingPageProps): Promise<React.JSX.Element> {
+  // Handle code parameter from Supabase Auth redirect
+  // If user lands on root with a code, redirect to callback handler
+  const params = await searchParams;
+  if (params.code) {
+    redirect(`/auth/callback?code=${params.code}&next=/login`);
+  }
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-100 to-purple-200">
       {/* Hero Section */}

@@ -3,10 +3,26 @@ import { MagicLinkForm } from '@/components/auth/MagicLinkForm';
 import { OAuthButton } from '@/components/auth/OAuthButton';
 import Link from 'next/link';
 
-export default function LoginPage() {
+interface LoginPageProps {
+  searchParams: Promise<{ confirmed?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const params = await searchParams;
+  const isConfirmed = params.confirmed === 'true';
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md space-y-8 rounded-lg bg-white p-8 shadow-md">
+        {isConfirmed && (
+          <div className="rounded-md border border-green-200 bg-green-50 p-4 text-green-800">
+            <p className="font-semibold">Email confirmed!</p>
+            <p className="mt-1 text-sm">
+              Your email has been successfully verified. You can now sign in to
+              your account.
+            </p>
+          </div>
+        )}
         <div>
           <h2 className="text-center text-3xl font-bold text-gray-900">
             Sign in to your account
