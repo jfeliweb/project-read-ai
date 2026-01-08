@@ -1,4 +1,5 @@
 import { createClient } from '@/src/libs/supabase/server';
+import { createUserProfile } from '@/src/libs/auth/utils';
 import { NextResponse } from 'next/server';
 
 type EmailOtpType =
@@ -24,6 +25,32 @@ export async function GET(request: Request) {
     });
 
     if (!error) {
+      // User is now authenticated after email confirmation
+      // Ensure profile exists (database trigger should create it, but ensure it exists)
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        // Try to get or create profile
+        try {
+          const profile = await createUserProfile(
+            user.id,
+            user.email || '',
+            (user.user_metadata?.name as string) || undefined,
+          );
+          // Profile creation is best-effort - if it fails, the trigger should handle it
+          if (!profile) {
+            console.warn(
+              `Profile not found for user ${user.id} after email confirmation, but trigger should create it`,
+            );
+          }
+        } catch (profileError) {
+          // Log but don't fail - profile might already exist or trigger will create it
+          console.error('Error ensuring profile exists:', profileError);
+        }
+      }
+
       // Redirect to login after successful email confirmation
       const redirectPath = next && next !== '/' ? next : '/login';
       const { origin } = new URL(request.url);

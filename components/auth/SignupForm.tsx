@@ -45,30 +45,8 @@ export function SignupForm() {
     } else if (data.user) {
       setSuccess(true);
       setLoading(false);
-      // Create profile via API route
-      try {
-        const response = await fetch('/api/auth/create-profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: data.user.id,
-            email: data.user.email,
-            name,
-          }),
-        });
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error(
-            'Failed to create profile:',
-            errorData.error || 'Unknown error',
-          );
-          // Don't show error to user since signup was successful
-          // Profile creation can happen later or via trigger
-        }
-      } catch (err) {
-        console.error('Error creating profile:', err);
-        // Don't show error to user since signup was successful
-      }
+      // Profile will be created automatically by database trigger or after email confirmation
+      // No need to create it here since user isn't authenticated yet
     }
   };
 
