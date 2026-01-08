@@ -26,12 +26,33 @@ export async function GET(request: Request) {
     if (!error) {
       // Redirect to login after successful email confirmation
       const redirectPath = next && next !== '/' ? next : '/login';
-      const redirectUrl = new URL(redirectPath, request.url);
+      const { origin } = new URL(request.url);
+      const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
+      const isLocalEnv = process.env.NODE_ENV === 'development';
+
+      // Use explicit app URL in production, or fall back to headers/origin
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        (isLocalEnv
+          ? origin
+          : forwardedHost
+            ? `https://${forwardedHost}`
+            : origin);
+
+      // Build redirect URL with success parameter for email confirmation
+      const redirectUrl = new URL(redirectPath, baseUrl);
       redirectUrl.searchParams.set('confirmed', 'true');
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.redirect(redirectUrl.toString());
     }
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(new URL('/auth/auth-code-error', request.url));
+  const { origin } = new URL(request.url);
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const isLocalEnv = process.env.NODE_ENV === 'development';
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (isLocalEnv ? origin : forwardedHost ? `https://${forwardedHost}` : origin);
+  const errorUrl = new URL('/auth/auth-code-error', baseUrl);
+  return NextResponse.redirect(errorUrl.toString());
 }

@@ -15,15 +15,17 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get('x-forwarded-host'); // original origin before load balancer
       const isLocalEnv = process.env.NODE_ENV === 'development';
 
-      // Build redirect URL with success parameter for email confirmation
-      const redirectUrl = new URL(
-        next,
-        isLocalEnv
+      // Use explicit app URL in production, or fall back to headers/origin
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ||
+        (isLocalEnv
           ? origin
           : forwardedHost
             ? `https://${forwardedHost}`
-            : origin,
-      );
+            : origin);
+
+      // Build redirect URL with success parameter for email confirmation
+      const redirectUrl = new URL(next, baseUrl);
       redirectUrl.searchParams.set('confirmed', 'true');
 
       if (isLocalEnv) {
