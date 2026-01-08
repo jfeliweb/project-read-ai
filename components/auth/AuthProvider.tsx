@@ -56,7 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (!user) {
+    // Only fetch profile if user exists AND has confirmed their email
+    // This prevents 404 errors on signup page before email confirmation
+    if (!user || !user.email_confirmed_at) {
       // Use setTimeout to defer state update and avoid synchronous setState
       const timeoutId = setTimeout(() => {
         if (!cancelled) {
@@ -80,12 +82,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setProfile(data.profile);
           }
         } else {
+          // 404 is expected for users without profiles - don't log as error
           if (!cancelled) {
             setProfile(null);
           }
         }
       } catch (error) {
         if (!cancelled) {
+          // Only log unexpected errors, not 404s
           console.error('Error fetching profile:', error);
           setProfile(null);
         }

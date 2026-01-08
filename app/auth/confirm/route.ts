@@ -16,15 +16,33 @@ export async function GET(request: Request) {
   const type = searchParams.get('type');
   const next = searchParams.get('next') ?? '/';
 
+  // Log incoming request for debugging
+  console.log('[/auth/confirm] Received confirmation request:', {
+    hasTokenHash: !!token_hash,
+    type,
+    next,
+    tokenHashLength: token_hash?.length,
+    tokenHashPrefix: token_hash?.substring(0, 20),
+  });
+
   if (token_hash && type) {
     // URL decode the token_hash in case it's encoded
     try {
-      token_hash = decodeURIComponent(token_hash);
-    } catch {
+      const decodedToken = decodeURIComponent(token_hash);
+      if (decodedToken !== token_hash) {
+        console.log(
+          '[/auth/confirm] Token was URL encoded, decoded successfully',
+        );
+        token_hash = decodedToken;
+      }
+    } catch (decodeError) {
+      console.warn('[/auth/confirm] Failed to decode token_hash:', decodeError);
       // If decoding fails, use original token_hash
     }
 
     const supabase = await createClient();
+
+    console.log('[/auth/confirm] Calling verifyOtp with type:', type);
 
     // Verify the OTP token
     const { data, error } = await supabase.auth.verifyOtp({
@@ -32,13 +50,21 @@ export async function GET(request: Request) {
       token_hash,
     });
 
-    // Log error details for debugging
+    // Log detailed error information for debugging
     if (error) {
-      console.error('Email confirmation error:', {
-        error: error.message,
+      console.error('[/auth/confirm] Email confirmation error:', {
+        errorMessage: error.message,
+        errorStatus: error.status,
         type,
-        token_hash_length: token_hash?.length,
-        token_hash_prefix: token_hash?.substring(0, 20),
+        tokenHashLength: token_hash?.length,
+        tokenHashPrefix: token_hash?.substring(0, 20),
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      console.log('[/auth/confirm] Token verification successful:', {
+        hasUser: !!data?.user,
+        hasSession: !!data?.session,
+        userId: data?.user?.id,
       });
     }
 
