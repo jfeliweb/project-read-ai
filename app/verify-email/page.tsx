@@ -67,11 +67,19 @@ function VerifyEmailForm() {
     setResendSuccess(false);
     setError(null);
 
+    // Use explicit app domain for email redirect
+    // Always use the main app domain, not the API domain
+    const appOrigin =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (window.location.origin.includes('api.readerlabs.app')
+        ? 'https://readerlabs.app'
+        : window.location.origin);
+
     const { error: resendError } = await supabase.auth.resend({
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${appOrigin}/auth/confirm`,
       },
     });
 

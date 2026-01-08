@@ -20,6 +20,14 @@ export function SignupForm() {
     setError(null);
     setLoading(true);
 
+    // Use explicit app domain for email redirect
+    // Always use the main app domain, not the API domain
+    const appOrigin =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (window.location.origin.includes('api.readerlabs.app')
+        ? 'https://readerlabs.app'
+        : window.location.origin);
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -27,7 +35,7 @@ export function SignupForm() {
         data: {
           name,
         },
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: `${appOrigin}/auth/confirm`,
       },
     });
 
