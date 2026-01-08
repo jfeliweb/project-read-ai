@@ -16,17 +16,14 @@ export async function GET() {
 
     // User is authenticated, try to get profile
     let profile = await getUserProfile();
+    const nameFromMetadata = (user.user_metadata?.name as string) || undefined;
 
     // If profile doesn't exist, try to create it (fallback if trigger didn't fire)
     if (!profile && user.email) {
       console.log(
         `Profile not found for user ${user.id}, attempting to create...`,
       );
-      profile = await createUserProfile(
-        user.id,
-        user.email,
-        (user.user_metadata?.name as string) || undefined,
-      );
+      profile = await createUserProfile(user.id, user.email, nameFromMetadata);
 
       if (!profile) {
         console.error(
@@ -36,6 +33,17 @@ export async function GET() {
           { error: 'Profile not found and could not be created' },
           { status: 404 },
         );
+      }
+    }
+
+    // If profile exists but name doesn't match metadata, update it
+    if (profile && nameFromMetadata && profile.name !== nameFromMetadata) {
+      const { updateUserProfile } = await import('@/src/libs/auth/utils');
+      const updatedProfile = await updateUserProfile(user.id, {
+        name: nameFromMetadata,
+      });
+      if (updatedProfile) {
+        profile = updatedProfile;
       }
     }
 

@@ -12,19 +12,37 @@ type EmailOtpType =
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const token_hash = searchParams.get('token_hash');
+  let token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type');
   const next = searchParams.get('next') ?? '/';
 
   if (token_hash && type) {
+    // URL decode the token_hash in case it's encoded
+    try {
+      token_hash = decodeURIComponent(token_hash);
+    } catch {
+      // If decoding fails, use original token_hash
+    }
+
     const supabase = await createClient();
 
-    const { error } = await supabase.auth.verifyOtp({
+    // Verify the OTP token
+    const { data, error } = await supabase.auth.verifyOtp({
       type: type as EmailOtpType,
       token_hash,
     });
 
-    if (!error) {
+    // Log error details for debugging
+    if (error) {
+      console.error('Email confirmation error:', {
+        error: error.message,
+        type,
+        token_hash_length: token_hash?.length,
+        token_hash_prefix: token_hash?.substring(0, 20),
+      });
+    }
+
+    if (!error && data) {
       // User is now authenticated after email confirmation
       // Ensure profile exists (database trigger should create it, but ensure it exists)
       const {
@@ -32,13 +50,31 @@ export async function GET(request: Request) {
       } = await supabase.auth.getUser();
 
       if (user) {
-        // Try to get or create profile
+        // Try to get or create profile with name from user metadata
         try {
-          const profile = await createUserProfile(
-            user.id,
-            user.email || '',
-            (user.user_metadata?.name as string) || undefined,
+          const { getUserProfile, updateUserProfile } = await import(
+            '@/src/libs/auth/utils'
           );
+          const nameFromMetadata =
+            (user.user_metadata?.name as string) || undefined;
+
+          // Try to get existing profile first
+          let profile = await getUserProfile();
+
+          if (!profile) {
+            // Profile doesn't exist, create it
+            profile = await createUserProfile(
+              user.id,
+              user.email || '',
+              nameFromMetadata,
+            );
+          } else if (nameFromMetadata && profile.name !== nameFromMetadata) {
+            // Profile exists but name doesn't match metadata (or is default), update it
+            profile = await updateUserProfile(user.id, {
+              name: nameFromMetadata,
+            });
+          }
+
           // Profile creation is best-effort - if it fails, the trigger should handle it
           if (!profile) {
             console.warn(
@@ -70,6 +106,9 @@ export async function GET(request: Request) {
       const redirectUrl = new URL(redirectPath, baseUrl);
       redirectUrl.searchParams.set('confirmed', 'true');
       return NextResponse.redirect(redirectUrl.toString());
+    } else {
+      // Token verification failed - redirect to error page with helpful message
+      console.error('Token verification failed:', error?.message);
     }
   }
 
