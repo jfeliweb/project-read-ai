@@ -1,4 +1,5 @@
 import { createClient } from '@/src/libs/supabase/server';
+import { createAdminClient } from '@/src/libs/supabase/admin';
 import { db } from '@/src/db';
 import { profiles } from '@/src/db/schema';
 import { eq } from 'drizzle-orm';
@@ -39,44 +40,35 @@ export async function createUserProfile(
     // Use provided name, or extract username from email as default
     const profileName = name || email.split('@')[0] || 'User';
 
-    const profile = await db
-      .insert(profiles)
-      .values({
-        id: userId,
-        email,
-        name: profileName,
-        role: 'user',
-      })
-      .returning();
+    // Use admin client to bypass RLS for profile creation
+    // This is necessary because the user may not be fully authenticated yet
+    // when creating their profile after email confirmation
+    const adminClient = createAdminClient();
 
-    return profile[0];
-  } catch (error: unknown) {
-    // Profile might already exist - try to fetch it
-    if (
-      (typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === '23505') ||
-      (typeof error === 'object' &&
-        error !== null &&
-        'message' in error &&
-        typeof error.message === 'string' &&
-        error.message.includes('duplicate'))
-    ) {
-      // Unique constraint violation - profile already exists
-      try {
-        const existingProfile = await db
-          .select()
-          .from(profiles)
-          .where(eq(profiles.id, userId))
-          .limit(1);
-        return existingProfile[0] || null;
-      } catch (fetchError) {
-        console.error('Error fetching existing profile:', fetchError);
-        return null;
-      }
+    const { data, error } = await adminClient
+      .from('profiles')
+      .upsert(
+        {
+          id: userId,
+          email,
+          name: profileName,
+          role: 'user',
+        },
+        {
+          onConflict: 'id',
+          ignoreDuplicates: false,
+        },
+      )
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating profile with admin client:', error);
+      return null;
     }
-    // Other errors
+
+    return data;
+  } catch (error: unknown) {
     console.error('Error creating profile:', error);
     return null;
   }
