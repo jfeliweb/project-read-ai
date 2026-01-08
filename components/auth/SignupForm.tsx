@@ -20,6 +20,13 @@ export function SignupForm() {
     setError(null);
     setLoading(true);
 
+    // Validate required fields
+    if (!name.trim()) {
+      setError('Name is required');
+      setLoading(false);
+      return;
+    }
+
     // Use explicit app domain for email redirect
     // Always use the main app domain, not the API domain
     const appOrigin =
@@ -82,6 +89,7 @@ export function SignupForm() {
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          required
           className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none"
           placeholder="Your name"
         />
