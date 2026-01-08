@@ -13,16 +13,21 @@ export async function getUser() {
 }
 
 export async function getUserProfile() {
-  const user = await getUser();
-  if (!user) return null;
+  try {
+    const user = await getUser();
+    if (!user) return null;
 
-  const profile = await db
-    .select()
-    .from(profiles)
-    .where(eq(profiles.id, user.id))
-    .limit(1);
+    const profile = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.id, user.id))
+      .limit(1);
 
-  return profile[0] || null;
+    return profile[0] || null;
+  } catch (error) {
+    console.error('Error in getUserProfile:', error);
+    throw error; // Re-throw to let caller handle it
+  }
 }
 
 export async function createUserProfile(
